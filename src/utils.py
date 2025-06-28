@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def resumetable(df, target_col, missing_value=-1, ignore_cols=None, verbose=True):
     ignore_cols = ignore_cols or []
