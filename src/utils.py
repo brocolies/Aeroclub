@@ -23,7 +23,7 @@ def resumetable(df, target_col, missing_value=-1, ignore_cols=None, verbose=True
         if df[col].nunique() == 2:
             summary.loc[col, 'Feature Type'] = 'Binary'
             continue
-        if np.issubdtype(df[col].dtype, 'object'):
+        if str(df[col].dtype) == 'object':
             summary.loc[col, 'Feature Type'] = 'Categorical'
             continue
         if np.issubdtype(df[col].dtype, np.number):
