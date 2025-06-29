@@ -26,8 +26,8 @@ def resumetable(df, target_col, missing_value=-1, ignore_cols=None, verbose=True
         if str(df[col].dtype) == 'object':
             summary.loc[col, 'Feature Type'] = 'Categorical'
             continue
-        if np.issubdtype(df[col].dtype, np.number):
-            summary.loc[col, 'Feature Type'] = 'Needs_Review(Int)'
+        else:
+            summary.loc[col, 'Feature Type'] = 'Needs_Review'
         
     summary = summary.sort_values(by='Feature Type')
     return summary
