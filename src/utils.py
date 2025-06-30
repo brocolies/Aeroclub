@@ -19,7 +19,7 @@ def get_column_types(df, cat_threshold=30, date_threshold=0.7):
             else:
                 cat_cols.append(col)
         elif pd.api.types.is_object_dtype(df[col]):
-            temp_date = pd.to_datetime(df[col], errors='coerce')
+            temp_date = pd.to_datetime(df[col], errors='coerce', infer_datetime_format=True)
             # date로 변환 가능 -> 변환
             # date로 변환 불가능 -> errors='coerce'가 NaT로 변환 
             temp_date_ratio = temp_date.count() / len(temp_date)
