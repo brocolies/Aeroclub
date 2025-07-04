@@ -45,7 +45,6 @@ def extract_datetime_features(df, date_columns):
     return df, new_cols
 
 def safe_optimize_dtypes(df):
-    # int64 최적화
     for col in df.select_dtypes(include=['int64']).columns:
         if df[col].isna().any():
             continue
@@ -64,16 +63,5 @@ def safe_optimize_dtypes(df):
                 df[col] = df[col].astype('uint8')
             elif col_max < 65535:
                 df[col] = df[col].astype('uint16')
-    
-    # float64 최적화
-    for col in df.select_dtypes(include=['float64']).columns:
-        df[col] = pd.to_numeric(df[col], downcast='float')
-    
-    # object 컬럼을 category로 변환 (메모리 절약)
-    for col in df.select_dtypes(include=['object']).columns:
-        nunique = df[col].nunique()
-        # unique 값이 전체 행의 50% 미만이면 category로 변환
-        if nunique / len(df) < 0.5:
-            df[col] = df[col].astype('category')
     
     return df
