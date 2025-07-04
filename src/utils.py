@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def get_column_types(df, cat_threshold=30, date_threshold=0.7):
+def get_column_types(df, cat_threshold=30, date_threshold=0.3):
     cat_cols = []
     num_cols = []
     date_cols = []
@@ -44,12 +44,8 @@ def extract_datetime_features(df, date_columns):
             new_cols.extend([f'{col}_hour', f'{col}_day', f'{col}_month'])
     return df, new_cols
 
-# 메모리 최적화 
-
-import numpy as np
-import pandas as pd
-
 def safe_optimize_dtypes(df):
+    # int64 최적화
     for col in df.select_dtypes(include=['int64']).columns:
         if df[col].isna().any():
             continue
@@ -68,5 +64,16 @@ def safe_optimize_dtypes(df):
                 df[col] = df[col].astype('uint8')
             elif col_max < 65535:
                 df[col] = df[col].astype('uint16')
+    
+    # float64 최적화
+    for col in df.select_dtypes(include=['float64']).columns:
+        df[col] = pd.to_numeric(df[col], downcast='float')
+    
+    # object 컬럼을 category로 변환 (메모리 절약)
+    for col in df.select_dtypes(include=['object']).columns:
+        nunique = df[col].nunique()
+        # unique 값이 전체 행의 50% 미만이면 category로 변환
+        if nunique / len(df) < 0.5:
+            df[col] = df[col].astype('category')
     
     return df
