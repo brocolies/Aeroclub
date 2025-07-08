@@ -75,8 +75,9 @@ def session_based_cv_ranker(df, cat_cols, n_splits=5):
         # 카테고리 컬럼 타입만 지정
         for col in cat_cols:
             if col in X_train.columns:
-                X_train[col] = X_train[col].astype('category')
-                X_val[col] = X_val[col].astype('category')
+                # float16 등의 타입 문제 방지를 위해 먼저 object로 변환
+                X_train[col] = X_train[col].astype(str).astype('category')
+                X_val[col] = X_val[col].astype(str).astype('category')
             
         # 그룹 크기
         train_groups = train_df.groupby('ranker_id').size().values
