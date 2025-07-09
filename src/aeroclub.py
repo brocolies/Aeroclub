@@ -6,6 +6,7 @@ from sklearn.compose import make_column_transformer
 from lightgbm import LGBMClassifier
 from sklearn.pipeline import make_pipeline
 from src.utils import *
+from src.run import *
 
 
 def duration_split(df, duration_cols):
@@ -48,5 +49,6 @@ def del_columns(df):
     del_cols = del_cols + constant_cols
     df = df.drop(columns=del_cols)
     return df
+
 
 

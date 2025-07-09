@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import lightgbm as lgb
 
 
 def get_column_types(df, cat_threshold=30, date_threshold=0.3):
@@ -59,11 +60,10 @@ def safe_optimize_dtypes(df):
                 df[col] = df[col].astype('int16')
         else:
             # 양수만 있을 때만 unsigned 사용
-            if col_max < 255:
+            if col_max <= 255:
                 df[col] = df[col].astype('uint8')
-            elif col_max < 65535:
+            elif col_max <= 65535:
                 df[col] = df[col].astype('uint16')
-    
     return df
 
 def reduce_mem_usage(df, verbose=True):
@@ -91,3 +91,54 @@ def reduce_mem_usage(df, verbose=True):
     end_mem = df.memory_usage().sum() / 1024**2
     if verbose: print(f'Mem. usage decreased to {end_mem:5.2f} Mb ({100 * (start_mem - end_mem) / start_mem:.1f}% reduction)')
     return df
+
+def get_feature_importance(df, cat_cols, importance_type='gain', top_n=20):
+    """
+    전체 데이터로 LGBMRanker를 학습하고 feature importance를 반환
+    
+    Args:
+        df: 데이터프레임 (selected, ranker_id 컬럼 포함)
+        cat_cols: 카테고리 컬럼 리스트
+        importance_type: 'gain', 'split', 'weight' 중 하나
+        top_n: 상위 몇 개 feature를 출력할지
+    
+    Returns:
+        feature_importance_df: feature importance DataFrame
+        ranker: 학습된 모델
+    """
+    # 특성/타겟 분리
+    X = df.drop(columns=['selected', 'ranker_id'])
+    y = df['selected']
+    
+    # 카테고리 컬럼 타입 지정
+    for col in cat_cols:
+        if col in X.columns:
+            X[col] = X[col].astype(str).astype('category')
+    
+    # 그룹 크기
+    groups = df.groupby('ranker_id').size().values
+    
+    # 모델 학습
+    ranker = lgb.LGBMRanker(
+        objective='lambdarank',
+        num_leaves=31,
+        learning_rate=0.1,
+        random_state=42,
+        verbosity=-1,
+        n_estimators=100
+    )
+    
+    ranker.fit(X, y, group=groups, categorical_feature=cat_cols)
+    
+    # Feature importance 계산
+    importance = ranker.booster_.feature_importance(importance_type=importance_type)
+    
+    feature_importance_df = pd.DataFrame({
+        'feature': X.columns,
+        'importance': importance
+    }).sort_values('importance', ascending=False)
+    
+    print(f"Top {top_n} features by {importance_type} importance:")
+    print(feature_importance_df.head(top_n))
+    
+    return feature_importance_df, ranker
