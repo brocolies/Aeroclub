@@ -48,7 +48,7 @@ def del_columns(df):
     constant_cols = df.columns[df.nunique() == 1].tolist()
     del_cols = del_cols + constant_cols
     df = df.drop(columns=del_cols)
-    return df
+    return df, constant_cols
 
 
 
